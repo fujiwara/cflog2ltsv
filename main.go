@@ -15,7 +15,8 @@ type Input struct {
 }
 
 func main() {
-	var wg sync.WaitGroup
+	var inputWg sync.WaitGroup
+	var outputWg sync.WaitGroup
 	n := runtime.NumCPU()
 	runtime.GOMAXPROCS(n)
 	inputCh := make(chan *Input, n)
@@ -23,8 +24,8 @@ func main() {
 	// spawn convert worker gorutines
 	for i := 0; i < n; i++ {
 		go func() {
-			wg.Add(1)
-			defer wg.Done()
+			inputWg.Add(1)
+			defer inputWg.Done()
 			for {
 				input, ok := <-inputCh
 				if !ok {
@@ -36,6 +37,8 @@ func main() {
 	}
 	// output goroutine
 	go func() {
+		outputWg.Add(1)
+		defer outputWg.Done()
 		for {
 			output, ok := <-outputCh
 			if !ok {
@@ -61,7 +64,9 @@ func main() {
 		fmt.Fprintln(os.Stderr, "reading standard input:", err)
 	}
 	close(inputCh)
-	wg.Wait()
+	inputWg.Wait()
+	close(outputCh)
+	outputWg.Wait()
 }
 
 func convert(in *Input) string {
