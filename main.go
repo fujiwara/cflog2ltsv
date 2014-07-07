@@ -70,7 +70,7 @@ func main() {
 }
 
 func convert(in *Input) string {
-	cols := strings.Split(in.line, "\t")
+	cols := strings.SplitN(in.line, "\t", len(in.fields))
 	for i, name := range in.fields {
 		cols[i] = name + ":" + cols[i]
 	}
